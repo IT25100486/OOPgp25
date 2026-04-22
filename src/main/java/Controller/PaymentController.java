@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping
+@RequestMapping ("/payment")
 public class PaymentController {
     private  PaymentService paymentService;
 
@@ -15,7 +15,7 @@ public class PaymentController {
         this.paymentService = paymentService;
     }
 
-    @PostMapping
+    @PostMapping ("/pay")
     public Payment pay(@RequestParam Long invoiceId,
                        @RequestParam double amount,
                        @RequestParam long timeGap)

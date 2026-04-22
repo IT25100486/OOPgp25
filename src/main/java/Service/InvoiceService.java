@@ -12,7 +12,7 @@ public class InvoiceService {
 
     private InvoiceRepository invoiceRepo;
 
-
+@Autowired
     public InvoiceService(InvoiceRepository invoiceRepo) {
         this.invoiceRepo = invoiceRepo;
     }
