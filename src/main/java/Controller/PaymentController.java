@@ -1,17 +1,15 @@
 package Controller;
 
-import Entity.Payment;
+import Entity.Payment; // This import makes "Entity." unnecessary below
 import Service.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalTime;
-
 @RestController
-@RequestMapping ("/payment")
+@RequestMapping("/payment")
 public class PaymentController {
-    private  PaymentService paymentService;
+
+    private PaymentService paymentService;
 
     @Autowired
     public void setPaymentService(PaymentService paymentService) {
@@ -21,10 +19,9 @@ public class PaymentController {
     @PostMapping("/pay")
     public Payment pay(@RequestParam Long invoiceId,
                        @RequestParam double amount,
-                       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.TIME) LocalTime entryTime,
-                       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.TIME) LocalTime leavingTime)
+                       @RequestParam long timeGap)
     {
-        return paymentService.makePayment(invoiceId, amount, entryTime, leavingTime);
+        // Removed "Entity." prefix because of the import above
+        return paymentService.makePayment(invoiceId, amount, timeGap);
     }
-
 }
