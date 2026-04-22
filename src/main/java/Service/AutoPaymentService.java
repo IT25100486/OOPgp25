@@ -1,48 +1,52 @@
 package Service;
 
+import Entity.AutoPayment;
 import Entity.Invoice;
 import Entity.Payment;
+import Repository.AutoPaymentRepository;
 import Repository.InvoiceRepository;
 import Repository.PaymentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalTime;
-
 @Service
-public class PaymentService {
-    private PaymentRepository paymentRepo;
-    private InvoiceRepository invoiceRepo;
-
+public class AutoPaymentService  {
     @Autowired
-    public PaymentService(InvoiceRepository invoiceRepo, PaymentRepository paymentRepo) {
-        this.invoiceRepo = invoiceRepo;
-        this.paymentRepo = paymentRepo;
-    }
+    private InvoiceRepository invoiceRepo;
+    @Autowired private PaymentRepository paymentRepo;
+    @Autowired private AutoPaymentRepository autoRepo;
 
-    public Payment makePayment(Long invoiceId, double amount, LocalTime entryTime, LocalTime leavingTime) {
+
+    public Payment processAutoPay(Long invoiceId, long timeGap, String customerId) {
+
         Invoice invoice = invoiceRepo.findById(invoiceId)
                 .orElseThrow(() -> new RuntimeException("Invoice not found"));
 
 
-        long calculatedGap = java.time.Duration.between(entryTime, leavingTime).toHours();
-
         double ratePerType = 0;
-        if (invoice.getVehicleType() == 'C') {    //ADD vehicle types
+        if (invoice.getVehicleType() == 'C') {
             ratePerType = 20.0;
         } else if (invoice.getVehicleType() == 'B') {
             ratePerType = 10.0;
         }
 
-        double calculatedAmount = calculatedGap * ratePerType;
+
+        double baseAmount = timeGap * ratePerType;
+
+
+        double finalAmount = autoRepo.findByCustomerId(customerId)
+                .map(customer -> baseAmount * (1 - customer.getDiscountRate()))
+                .orElse(baseAmount);
 
 
         Payment payment = new Payment();
-        payment.setAmount(calculatedAmount);
-        payment.setTimeGap(calculatedGap);
+        payment.setAmount(finalAmount);
+        payment.setTimeGap(timeGap);
         payment.setInvoice(invoice);
 
         return paymentRepo.save(payment);
     }
 
 }
+
+

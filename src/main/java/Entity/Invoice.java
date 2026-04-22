@@ -14,6 +14,8 @@ public class Invoice {
 
     private  double hours;
     private  double rate;
+    private  char vehicleType;
+
 
     @OneToMany(mappedBy = "invoice" , cascade = CascadeType.ALL)
     private List<Payment> payments;
