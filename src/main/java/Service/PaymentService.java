@@ -1,48 +1,44 @@
 package Service;
 
-import Entity.Invoice;
-import Entity.Payment;
-import Repository.InvoiceRepository;
-import Repository.PaymentRepository;
+import Entity.*;
+import Repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalTime;
+import java.time.Duration;
 
 @Service
 public class PaymentService {
-    private PaymentRepository paymentRepo;
-    private InvoiceRepository invoiceRepo;
+    private final PaymentRepository paymentRepo;
+    private final InvoiceRepository invoiceRepo;
+    private final RateChartRepository rateRepo;
 
     @Autowired
-    public PaymentService(InvoiceRepository invoiceRepo, PaymentRepository paymentRepo) {
+    public PaymentService(InvoiceRepository invoiceRepo, PaymentRepository paymentRepo, RateChartRepository rateRepo) {
         this.invoiceRepo = invoiceRepo;
         this.paymentRepo = paymentRepo;
+        this.rateRepo = rateRepo;
     }
 
-    public Payment makePayment(Long invoiceId, double amount, LocalTime entryTime, LocalTime leavingTime) {
+    public Payment makePayment(Long invoiceId, LocalTime entryTime, LocalTime leavingTime) {
         Invoice invoice = invoiceRepo.findById(invoiceId)
                 .orElseThrow(() -> new RuntimeException("Invoice not found"));
 
 
-        long calculatedGap = java.time.Duration.between(entryTime, leavingTime).toHours();
+        String type = String.valueOf(invoice.getVehicleType());
+        RateChart rate = rateRepo.findBySlotType(type)
+                .orElseThrow(() -> new RuntimeException("Rate not defined for: " + type));
 
-        double ratePerType = 0;
-        if (invoice.getVehicleType() == 'C') {    //ADD vehicle types
-            ratePerType = 20.0;
-        } else if (invoice.getVehicleType() == 'B') {
-            ratePerType = 10.0;
-        }
+        long hours = Duration.between(entryTime, leavingTime).toHours();
 
-        double calculatedAmount = calculatedGap * ratePerType;
 
+        double calculatedAmount = (hours >= 24) ? (hours / 24.0) * rate.getDailyRate() : hours * rate.getHourlyRate();
 
         Payment payment = new Payment();
         payment.setAmount(calculatedAmount);
-        payment.setTimeGap(calculatedGap);
+        payment.setTimeGap(hours);
         payment.setInvoice(invoice);
 
         return paymentRepo.save(payment);
     }
-
 }

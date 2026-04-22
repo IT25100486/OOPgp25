@@ -1,43 +1,29 @@
 package Service;
 
-import Entity.AutoPayment;
-import Entity.Invoice;
-import Entity.Payment;
-import Repository.AutoPaymentRepository;
-import Repository.InvoiceRepository;
-import Repository.PaymentRepository;
+import Entity.*;
+import Repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class AutoPaymentService  {
-    @Autowired
-    private InvoiceRepository invoiceRepo;
+public class AutoPaymentService {
+    @Autowired private InvoiceRepository invoiceRepo;
     @Autowired private PaymentRepository paymentRepo;
     @Autowired private AutoPaymentRepository autoRepo;
-
+    @Autowired private RateChartRepository rateRepo;
 
     public Payment processAutoPay(Long invoiceId, long timeGap, String customerId) {
-
         Invoice invoice = invoiceRepo.findById(invoiceId)
                 .orElseThrow(() -> new RuntimeException("Invoice not found"));
 
+        RateChart rate = rateRepo.findBySlotType(String.valueOf(invoice.getVehicleType()))
+                .orElseThrow(() -> new RuntimeException("Rate not found"));
 
-        double ratePerType = 0;
-        if (invoice.getVehicleType() == 'C') {
-            ratePerType = 20.0;
-        } else if (invoice.getVehicleType() == 'B') {
-            ratePerType = 10.0;
-        }
-
-
-        double baseAmount = timeGap * ratePerType;
-
+        double baseAmount = timeGap * rate.getHourlyRate();
 
         double finalAmount = autoRepo.findByCustomerId(customerId)
                 .map(customer -> baseAmount * (1 - customer.getDiscountRate()))
                 .orElse(baseAmount);
-
 
         Payment payment = new Payment();
         payment.setAmount(finalAmount);
@@ -46,7 +32,4 @@ public class AutoPaymentService  {
 
         return paymentRepo.save(payment);
     }
-
 }
-
-
