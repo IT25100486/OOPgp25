@@ -4,6 +4,7 @@ import Entity.Invoice;
 import Entity.Payment;
 import Repository.InvoiceRepository;
 import Repository.PaymentRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -11,6 +12,7 @@ public class PaymentService {
     private PaymentRepository paymentRepo;
     private InvoiceRepository invoiceRepo;
 
+    @Autowired
     public PaymentService(InvoiceRepository invoiceRepo, PaymentRepository paymentRepo) {
         this.invoiceRepo = invoiceRepo;
         this.paymentRepo = paymentRepo;
